@@ -93,8 +93,10 @@ class Planet:
             print(x)
             print(y)
             print(z)
-            ax.plot_surface(x,y,z, linewidth=2)
-            break
+
+
+
+            #break
 
         plt.show()
 
