@@ -9,12 +9,30 @@ class Panel:
     """
 
     def __init__(self, start_phi, end_phi, start_theta, end_theta):
+        """
+        Phi is the longitude angle, theta is the latitude angle
+        """
+
         self.start_phi = start_phi
         self.start_theta = start_theta
         self.end_phi = end_phi
         self.end_theta = end_theta
         self.color = 0
         self.albedo = []
+
+    def get_zenith_angle(obliquity=0, rotation_angle=0):
+        """
+        Calculate the zenith angle of the sun above this panel and set the 
+        panel zenith angle parameter.
+
+        Inputs:
+        obliquity - the obliquity of the planet in its orbit [radians]
+        rotation_angle - the degree to which the planet is rotated about its 
+                         axis [radians]
+
+        Returns:
+        zenith_angle - the zenith angle of the Sun
+        """
 
     def set_albedo(self, albedo):
         """
@@ -96,7 +114,7 @@ class Planet:
                         theta_steps[j], theta_steps[j+1]) )
 
 
-    def generate_planet_data(self):
+    def generate_planet_data(self, scale=0):
         """
         Generate the vertices of the panels and save them to a JSON file for
         use in the WebGL rendering.
@@ -104,7 +122,7 @@ class Planet:
 
         panels = []
         for panel in self.panels:
-            panel_verts = panel.get_cartesian_coordinates(self.radius)
+            panel_verts = panel.get_cartesian_coordinates(self.radius, scale)
             panel_data = panel_verts, panel.color
             panels.append(panel_data)
 
@@ -113,6 +131,7 @@ class Planet:
         output_dict["panels"] = panels
         with open("Web/planet_data.json", "w") as outfile:
             json.dump(output_dict, outfile)#, indent=2)
+
 
 
 
