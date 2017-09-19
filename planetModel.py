@@ -1,8 +1,6 @@
 import numpy as np
-from math import pi, log, exp, sin, cos
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-
+import json
+from math import pi, sin, cos
 
 class Panel:
     """
@@ -15,36 +13,52 @@ class Panel:
         self.start_theta = start_theta
         self.end_phi = end_phi
         self.end_theta = end_theta
+        self.color = 0
+        self.albedo = []
 
     def set_albedo(self, albedo):
         """
         Set the albedo of the panel. The passed in albedo array should be 
         broken into wavelength bands.
         """
-        self.albedo = [] #TODO: implement this later
+        self.albedo = albedo
 
-    def get_cartesian_coordinates(self,planet_radius):
+
+    def get_cartesian_coordinates(self,planet_radius, scale = 0):
         """
         Return the x,y,z coordinates of the panel.
+
+        Input:
+        planet_radius - the radius of the planet [m]
+        scale - the factor by which the planet will be scaled. If set to 0
+                the planet will be scaled down by 1/5th the radius for ease of 
+                use when plotting (no need to plot huge numbers when smaller 
+                ones will work just fine).
         """
 
-        x0 = planet_radius*sin(self.start_phi)*cos(self.start_theta)
-        y0 = planet_radius*sin(self.start_phi)*sin(self.start_theta)
-        z0 = planet_radius*cos(self.start_phi)
+        if scale <= 0:
+            scale = 5.0/planet_radius
 
-        x1 = planet_radius*sin(self.start_phi)*cos(self.end_theta)
-        y1 = planet_radius*sin(self.start_phi)*sin(self.end_theta)
-        z1 = planet_radius*cos(self.start_phi)
+        x0 = planet_radius*sin(self.start_phi)*cos(self.start_theta)/scale
+        y0 = planet_radius*sin(self.start_phi)*sin(self.start_theta)/scale
+        z0 = planet_radius*cos(self.start_phi)/scale
 
-        x2 = planet_radius*sin(self.end_phi)*cos(self.start_theta)
-        y2 = planet_radius*sin(self.end_phi)*sin(self.start_theta)
-        z2 = planet_radius*cos(self.end_phi)
+        x1 = planet_radius*sin(self.start_phi)*cos(self.end_theta)/scale
+        y1 = planet_radius*sin(self.start_phi)*sin(self.end_theta)/scale
+        z1 = planet_radius*cos(self.start_phi)/scale
 
-        x3 = planet_radius*sin(self.end_phi)*cos(self.end_theta)
-        y3 = planet_radius*sin(self.end_phi)*sin(self.end_theta)
-        z3 = planet_radius*cos(self.end_phi)
+        x2 = planet_radius*sin(self.end_phi)*cos(self.end_theta)/scale
+        y2 = planet_radius*sin(self.end_phi)*sin(self.end_theta)/scale
+        z2 = planet_radius*cos(self.end_phi)/scale
 
-        return [x0,x1,x2,x3], [y0,y1,y2,y3], [z0,z1,z2,z3]
+        x3 = planet_radius*sin(self.end_phi)*cos(self.start_theta)/scale
+        y3 = planet_radius*sin(self.end_phi)*sin(self.start_theta)/scale
+        z3 = planet_radius*cos(self.end_phi)/scale
+
+        #scale down everything by 1/5th the radius so all planets will
+        #be the same size when rendered
+
+        return (x0,y0,z0), (x1,y1,z1), (x2,y2,z2), (x3,y3,z3)
 
 class Planet:
     """
@@ -81,52 +95,34 @@ class Planet:
                 self.panels.append( Panel(phi_steps[i], phi_steps[i+1], \
                         theta_steps[j], theta_steps[j+1]) )
 
-    def plot_planet(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
 
-        count = 0
+    def generate_planet_data(self):
+        """
+        Generate the vertices of the panels and save them to a JSON file for
+        use in the WebGL rendering.
+        """
+
+        panels = []
         for panel in self.panels:
-            x,y,z = panel.get_cartesian_coordinates(self.radius)
-            print("\n%d:"%(count))
-            count += 1
-            print(x)
-            print(y)
-            print(z)
+            panel_verts = panel.get_cartesian_coordinates(self.radius)
+            panel_data = panel_verts, panel.color
+            panels.append(panel_data)
+
+        #write the panel data out to a JSON file
+        output_dict = {}
+        output_dict["panels"] = panels
+        with open("Web/planet_data.json", "w") as outfile:
+            json.dump(output_dict, outfile)#, indent=2)
 
 
 
-            #break
-
-        plt.show()
-
-def test():
-    p = Planet(10.0, 10)
-    p.plot_planet()
-
-test()
+#def test():
+#    p = Planet(10.0, 15)
+#    p.generate_planet_data()
+#
+#test()
 
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
