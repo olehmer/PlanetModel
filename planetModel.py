@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from math import pi, sin, cos
+from math import pi, sin, cos, acos
 
 class Panel:
     """
@@ -20,19 +20,31 @@ class Panel:
         self.color = 0
         self.albedo = []
 
-    def get_zenith_angle(obliquity=0, rotation_angle=0):
+    def set_color(self, color):
+        self.color = color
+
+    def get_zenith_angle(self):
         """
         Calculate the zenith angle of the sun above this panel and set the 
         panel zenith angle parameter.
 
-        Inputs:
-        obliquity - the obliquity of the planet in its orbit [radians]
-        rotation_angle - the degree to which the planet is rotated about its 
-                         axis [radians]
+        IMPORTANT: it is assumed that a theta of 0 is directly at the sun
 
         Returns:
-        zenith_angle - the zenith angle of the Sun
+        result - the zenith angle of the Sun or -1 if the panel is on the dark
+                 side of the planet
         """
+        result = -1
+
+        phi = (self.start_phi + self.end_phi)/2.0
+        theta = (self.start_theta + self.end_theta)/2.0
+
+        if theta < pi/2.0 or theta > 1.5*pi:
+            if phi < pi:
+                #this panel is in the light
+                result = pi/2.0-acos(cos(pi/2.0-phi)*cos(theta))
+
+        return result
 
     def set_albedo(self, albedo):
         """
